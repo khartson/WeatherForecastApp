@@ -15,8 +15,20 @@ builder.Services.AddHttpClient("GeocodeClient", client =>
     client.DefaultRequestHeaders.Accept.Add(
         new MediaTypeWithQualityHeaderValue("application/json")
     );
-    client.BaseAddress = new Uri("https.//geocoding.geo.census.gov/geocoder");
+    client.BaseAddress = new Uri("https.//geocoding.geo.census.gov/geocoder/");
 });
+
+builder.Services.AddHttpClient("NwsClient", client =>
+{
+    client.DefaultRequestHeaders.Accept.Clear();
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue("application/geo+json")
+    );
+    client.BaseAddress = new Uri("https://api.weather.gov/");
+}); 
+
+
+
 
 var app = builder.Build();
 

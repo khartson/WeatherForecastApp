@@ -11,10 +11,12 @@ namespace api.Services.Implementations
     {
         
         private readonly HttpClient _geoCodeClient;
+        private readonly HttpClient _nwsClient;
 
         public WeatherService(IHttpClientFactory httpClientFactory)
         {
             _geoCodeClient = httpClientFactory.CreateClient("GeocodeClient");;
+            _nwsClient = httpClientFactory.CreateClient("NwsClient");
         }
         public ForecastResponse GetForecast(AddressRequest address)
         {
@@ -43,7 +45,18 @@ namespace api.Services.Implementations
 
             Coordinates coordinates = res.Result.AddressMatches.First().Coordinates;
             return (coordinates.X, coordinates.Y);
-        }    
+        }   
+        public async Task<string> GetGridpointsFromGeoCodeAsync(double x, double y)
+        {
+            
+            NwsGridResponse res = await _nwsClient.GetFromJsonAsync<NwsGridResponse>(
+                $"points/{y},{x}"
+            );
+
+            return res.Properties.Forecast;
+        }         
     }
+
+
 
 }
