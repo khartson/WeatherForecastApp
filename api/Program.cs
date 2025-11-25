@@ -1,12 +1,15 @@
 using System.Net;
 using System.Net.Http.Headers;
 
+using api.Services.Interfaces;
+using api.Services.Implementations;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
-
+builder.Services.AddScoped<IWeatherService, WeatherService>();
 // 1) Configure Httpclient for Geocoding API
 // We are using named clients for multiple configurations 
 builder.Services.AddHttpClient("GeocodeClient", client =>
@@ -15,7 +18,7 @@ builder.Services.AddHttpClient("GeocodeClient", client =>
     client.DefaultRequestHeaders.Accept.Add(
         new MediaTypeWithQualityHeaderValue("application/json")
     );
-    client.BaseAddress = new Uri("https.//geocoding.geo.census.gov/geocoder/");
+    client.BaseAddress = new Uri("https://geocoding.geo.census.gov/geocoder/");
 });
 
 builder.Services.AddHttpClient("NwsClient", client =>
@@ -25,6 +28,7 @@ builder.Services.AddHttpClient("NwsClient", client =>
         new MediaTypeWithQualityHeaderValue("application/geo+json")
     );
     client.BaseAddress = new Uri("https://api.weather.gov/");
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("WeatherForecastApp (https://github.com/khart/WeatherForecastApp)");
 }); 
 
 
