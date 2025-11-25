@@ -18,18 +18,50 @@ namespace api.Services.Implementations
             _geoCodeClient = httpClientFactory.CreateClient("GeocodeClient");;
             _nwsClient = httpClientFactory.CreateClient("NwsClient");
         }
-        public ForecastResponse GetForecast(AddressRequest address)
+        public async Task<ForecastResponse> GetForecast(AddressRequest address)
         {
-            // Dummy implementation for example purpose
-            return new ForecastResponse(
-                new ForecastAddress("123 Main St", "Anytown", "CA", "12345"),
-                new Data(new List<ForecastPeriod>
-                {
-                    new ForecastPeriod(1, "Monday", true, 75, "F", null, "25mph", "NW", "Icon", "Day", "Sunny all day")
-                })
+            // 1) Geocode the address to lat/lon 
+            // For now, take the first result TODO: offer multiple/no result handlers
+            AddressMatch addressMatch = await GetCoordinatesFromAddressAsync(address);
+            Coordinates coordinates   = addressMatch.Coordinates;
+
+            // 2) Get the NWS gridpoints from lat/long 
+            NwsGridResponse gridResponse = await GetGridpointsFromGeoCodeAsync(
+                coordinates.X,
+                coordinates.Y
             );
+            string forecastUrl = gridResponse.Properties.Forecast;
+
+            // 3) Retrieve the 7-day forecast from the gridpoints
+            NwsForecastResponse forecastResponse = await GetForecastFromGridResponseAsync(forecastUrl);
+
+            // 4) Map the forecast to our internal model and return
+            ForecastResponse response = new ForecastResponse
+            (
+                addressMatch.MatchedAddress,
+                coordinates.Y,
+                coordinates.X,
+                new Data(
+                     [.. forecastResponse.Properties.Periods.Select(p => new ForecastPeriod
+                     (
+                        p.Number,
+                        p.Name,
+                        p.IsDaytime,
+                        p.Temperature,
+                        p.TemperatureUnit,
+                        null,
+                        p.Windspeed,
+                        p.WindDirection,
+                        p.Icon,
+                        p.ShortForecast,
+                        p.DetailedForecast
+                     ))]
+                )
+            );
+            return response; 
         }
-        public async Task<(double x, double y)> GetCoordinatesFromAddressAsync(AddressRequest address)
+
+        private async Task<AddressMatch> GetCoordinatesFromAddressAsync(AddressRequest address)
         {
             string street = address.Street.Trim(); 
             string city   = address.City.Trim();
@@ -43,20 +75,20 @@ namespace api.Services.Implementations
                 $"locations/onelineaddress?address={encodedAddress}&benchmark=4&format=json"
             );
 
-            Coordinates coordinates = res.Result.AddressMatches.First().Coordinates;
-            return (coordinates.X, coordinates.Y);
+            AddressMatch addressMatch = res.Result.AddressMatches.First();
+            return addressMatch;
         }   
-        public async Task<string> GetGridpointsFromGeoCodeAsync(double x, double y)
+        private async Task<NwsGridResponse> GetGridpointsFromGeoCodeAsync(double x, double y)
         {
             
             NwsGridResponse res = await _nwsClient.GetFromJsonAsync<NwsGridResponse>(
                 $"points/{y},{x}"
             );
 
-            return res.Properties.Forecast;
+            return res; 
         }         
 
-        public async Task<NwsForecastResponse> GetForecastFromGridResponseAsync(string forecastUrl)
+        private async Task<NwsForecastResponse> GetForecastFromGridResponseAsync(string forecastUrl)
         {
             NwsForecastResponse res = await _nwsClient.GetFromJsonAsync<NwsForecastResponse>(
                 forecastUrl.Replace("https://api.weather.gov/", "")

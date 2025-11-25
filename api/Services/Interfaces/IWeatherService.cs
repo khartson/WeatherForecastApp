@@ -5,6 +5,6 @@ namespace api.Services.Interfaces
 {
     public interface IWeatherService
     {
-        ForecastResponse GetForecast(AddressRequest address);
+        Task<ForecastResponse> GetForecast(AddressRequest address);
     }
 }
