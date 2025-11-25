@@ -2,6 +2,7 @@ using api.Models.External;
 using api.Models.Requests;
 using api.Models.Responses;
 using api.Services.Interfaces;
+using System.Net;
 
 namespace api.Services.Implementations
 {
@@ -28,14 +29,15 @@ namespace api.Services.Implementations
         }
         public async Task<(double x, double y)> GetCoordinatesFromAddressAsync(AddressRequest address)
         {
-            string street = request.Street.Trim(); 
-            string city   = request.City.Trim();
-            string state  = request.State.Trim();
-            string zip    = request.Zip.Trim();
+            string street = address.Street.Trim(); 
+            string city   = address.City.Trim();
+            string state  = address.State.Trim();
+            string zip    = address.Zip.Trim();
 
             string encodedAddress = WebUtility.UrlEncode($"{street}, {city}, {state} {zip}");
-
-            GeoCodeRootResponse res = await _geoCodeClient.GetFromJsonAsync<GeoCodeRootResponse>(
+            Console.WriteLine($"Encoded Address: {encodedAddress}");
+            Console.WriteLine($"Request URL: locations/onelineaddress?address={encodedAddress}&benchmark=4&format=json");
+            GeocodeRootResponse res = await _geoCodeClient.GetFromJsonAsync<GeocodeRootResponse>(
                 $"locations/onelineaddress?address={encodedAddress}&benchmark=4&format=json"
             );
 
