@@ -23,7 +23,7 @@ namespace api.Models.External
         string DetailedForecast
     );
 
-    public record NwsForecastResonse(
+    public record NwsForecastResponse(
         string Id,
         string Type,
         ForecastProperties Properties

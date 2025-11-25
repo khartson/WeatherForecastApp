@@ -55,6 +55,15 @@ namespace api.Services.Implementations
 
             return res.Properties.Forecast;
         }         
+
+        public async Task<NwsForecastResponse> GetForecastFromGridResponseAsync(string forecastUrl)
+        {
+            NwsForecastResponse res = await _nwsClient.GetFromJsonAsync<NwsForecastResponse>(
+                forecastUrl.Replace("https://api.weather.gov/", "")
+            );
+
+            return res;
+        }
     }
 
 
