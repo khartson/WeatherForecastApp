@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace api.Models.Responses
+namespace api.Models.External
 {
 
     public abstract record BaseProperties(

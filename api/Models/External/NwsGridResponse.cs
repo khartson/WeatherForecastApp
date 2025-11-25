@@ -1,4 +1,4 @@
-namespace api.Models.Responses
+namespace api.Models.External
 {
     public record GridProperties(
         string Id,
