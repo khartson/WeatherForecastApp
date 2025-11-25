@@ -4,6 +4,8 @@ using api.Models.Responses;
 using api.Services.Interfaces;
 using System.Net;
 
+// TODO: Logging and error handling, retries, etc.
+
 namespace api.Services.Implementations
 {
 
