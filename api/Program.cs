@@ -11,6 +11,24 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IWeatherService, WeatherService>();
 builder.Services.AddControllers(); 
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policy =>
+    {
+        var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string>()?.Split(",");
+        var allowedMethods = builder.Configuration.GetSection("CorsSettings:AllowedMethods").Get<string>()?.Split(",");
+        var allowedHeaders = builder.Configuration.GetSection("CorsSettings:AllowedHeaders").Get<string>()?.Split(",");
+
+        if (allowedOrigins != null)
+        {
+            policy.WithOrigins(allowedOrigins) 
+                .AllowAnyMethod()
+                .AllowAnyHeader(); 
+
+        }
+    });
+});
 // 1) Configure Httpclient for Geocoding API
 // We are using named clients for multiple configurations 
 builder.Services.AddHttpClient("GeocodeClient", client =>
@@ -32,9 +50,6 @@ builder.Services.AddHttpClient("NwsClient", client =>
     client.DefaultRequestHeaders.UserAgent.ParseAdd("WeatherForecastApp (https://github.com/khart/WeatherForecastApp)");
 }); 
 
-
-
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -45,6 +60,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.MapControllers();
+app.UseCors("CorsPolicy");
 
 var summaries = new[]
 {
