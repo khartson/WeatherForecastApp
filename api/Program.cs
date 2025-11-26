@@ -1,8 +1,8 @@
 using System.Net;
 using System.Net.Http.Headers;
-
 using api.Services.Interfaces;
 using api.Services.Implementations;
+using Microsoft.AspNetCore.Mvc; 
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IWeatherService, WeatherService>();
+builder.Services.AddControllers(); 
 // 1) Configure Httpclient for Geocoding API
 // We are using named clients for multiple configurations 
 builder.Services.AddHttpClient("GeocodeClient", client =>
@@ -43,6 +44,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.MapControllers();
 
 var summaries = new[]
 {
