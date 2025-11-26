@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, MapPin, Cloud } from 'lucide-react';
 import { WeatherCard } from './components/WeatherCard';
+import type { AddressRequest, Forecast, ForecastPeriod } from './types/Forecast';
 
 interface AddressForm {
   street: string;
@@ -27,7 +28,7 @@ interface DayForecast {
 }
 
 export default function App() {
-  const [address, setAddress] = useState<AddressForm>({
+  const [address, setAddress] = useState<AddressRequest>({
     street: '',
     city: '',
     state: '',
