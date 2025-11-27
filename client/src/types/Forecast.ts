@@ -9,7 +9,9 @@ export interface Forecast {
     address: string; 
     latitude: number;
     longitude: number;
-    periods: ForecastPeriod[]; 
+    data: {
+        periods: ForecastPeriod[]; 
+    }
 }
 
 export interface ForecastPeriod {
@@ -24,5 +26,6 @@ export interface ForecastPeriod {
     icon: string; 
     shortForecast: string; 
     detailedForecast: string; 
+    conditions: "Snow" | "Rain" | "Cloud" | "Wind" | "Sun";
 }
 

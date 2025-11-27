@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import { Sun, Cloud, CloudRain, CloudSnow, Wind, CloudDrizzle, Moon } from 'lucide-react';
 
 interface DayForecast {
@@ -23,6 +23,9 @@ interface WeatherCardProps {
 }
 
 export function WeatherCard({ dayForecast }: WeatherCardProps) {
+  const [showDayDetails, setShowDayDetails] = useState(false);
+  const [showEveningDetails, setShowEveningDetails] = useState(false);
+
   const getWeatherIcon = (iconName: string, isEvening: boolean = false) => {
     const iconClass = "w-10 h-10 mx-auto";
     switch (iconName) {
@@ -50,25 +53,40 @@ export function WeatherCard({ dayForecast }: WeatherCardProps) {
       </div>
 
       {/* Day Section - Sky blue gradient */}
-      <div className="relative bg-gradient-to-b from-sky-400 to-sky-200 p-4 border-b border-white/30">
+      <div 
+        className="relative bg-gradient-to-b from-sky-400 to-sky-200 p-4 border-b border-white/30 h-40 cursor-pointer"
+        onMouseEnter={() => setShowDayDetails(true)}
+        onMouseLeave={() => setShowDayDetails(false)}
+      >
         {/* Decorative sun rays effect */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.4),transparent_50%)]" />
         
-        <div className="relative text-center">
-          <p className="text-sky-900/70 text-xs mb-2 uppercase tracking-wide">Day</p>
-          <div className="text-yellow-400 mb-2">
-            {getWeatherIcon(dayForecast.dayForecast.icon, false)}
+        {!showDayDetails ? (
+          <div className="relative text-center h-full flex flex-col justify-center">
+            <p className="text-sky-900/70 text-xs mb-2 uppercase tracking-wide">Day</p>
+            <div className="text-yellow-400 mb-2">
+              {getWeatherIcon(dayForecast.dayForecast.icon, false)}
+            </div>
+            <p className="text-sky-900 text-sm mb-2 line-clamp-1">{dayForecast.dayForecast.condition}</p>
+            <div className="flex justify-center items-center gap-2">
+              <span className="text-sky-900">{dayForecast.dayForecast.high}°</span>
+              <span className="text-sky-700">{dayForecast.dayForecast.low}°</span>
+            </div>
           </div>
-          <p className="text-sky-900 text-sm mb-2">{dayForecast.dayForecast.condition}</p>
-          <div className="flex justify-center items-center gap-2">
-            <span className="text-sky-900">{dayForecast.dayForecast.high}°</span>
-            <span className="text-sky-700">{dayForecast.dayForecast.low}°</span>
+        ) : (
+          <div className="relative h-full overflow-y-auto px-2">
+            <p className="text-sky-900/70 text-xs mb-1 uppercase tracking-wide">Day Details</p>
+            <p className="text-sky-900 text-xs leading-relaxed">{dayForecast.dayForecast.condition}</p>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Evening Section - Night sky gradient */}
-      <div className="relative bg-gradient-to-b from-indigo-900 to-purple-900 p-4">
+      <div 
+        className="relative bg-gradient-to-b from-indigo-900 to-purple-900 p-4 h-40 cursor-pointer"
+        onMouseEnter={() => setShowEveningDetails(true)}
+        onMouseLeave={() => setShowEveningDetails(false)}
+      >
         {/* Decorative stars effect */}
         <div className="absolute inset-0" style={{
           backgroundImage: `radial-gradient(2px 2px at 20% 30%, white, transparent),
@@ -81,17 +99,24 @@ export function WeatherCard({ dayForecast }: WeatherCardProps) {
           backgroundPosition: '50% 50%'
         }} />
         
-        <div className="relative text-center">
-          <p className="text-indigo-300/70 text-xs mb-2 uppercase tracking-wide">Evening</p>
-          <div className="text-blue-200 mb-2">
-            {getWeatherIcon(dayForecast.eveningForecast.icon, true)}
+        {!showEveningDetails ? (
+          <div className="relative text-center h-full flex flex-col justify-center">
+            <p className="text-indigo-300/70 text-xs mb-2 uppercase tracking-wide">Evening</p>
+            <div className="text-blue-200 mb-2">
+              {getWeatherIcon(dayForecast.eveningForecast.icon, true)}
+            </div>
+            <p className="text-indigo-100 text-sm mb-2 line-clamp-1">{dayForecast.eveningForecast.condition}</p>
+            <div className="flex justify-center items-center gap-2">
+              <span className="text-white">{dayForecast.eveningForecast.high}°</span>
+              <span className="text-indigo-300">{dayForecast.eveningForecast.low}°</span>
+            </div>
           </div>
-          <p className="text-indigo-100 text-sm mb-2">{dayForecast.eveningForecast.condition}</p>
-          <div className="flex justify-center items-center gap-2">
-            <span className="text-white">{dayForecast.eveningForecast.high}°</span>
-            <span className="text-indigo-300">{dayForecast.eveningForecast.low}°</span>
+        ) : (
+          <div className="relative h-full overflow-y-auto px-2">
+            <p className="text-indigo-300/70 text-xs mb-1 uppercase tracking-wide">Evening Details</p>
+            <p className="text-indigo-100 text-xs leading-relaxed">{dayForecast.eveningForecast.condition}</p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

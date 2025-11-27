@@ -1,14 +1,8 @@
 import React, { useState } from 'react';
 import { Search, MapPin, Cloud } from 'lucide-react';
 import { WeatherCard } from './components/WeatherCard';
-import type { AddressRequest, Forecast, ForecastPeriod } from './types/Forecast';
-
-interface AddressForm {
-  street: string;
-  city: string;
-  state: string;
-  zip: string;
-}
+import type { Forecast, ForecastPeriod, AddressRequest} from './types/Forecast';
+import { GetForecast } from './utils/GetForecast';
 
 interface DayForecast {
   day: string;
@@ -36,69 +30,81 @@ export default function App() {
   });
   const [forecast, setForecast] = useState<DayForecast[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [displayAddress, setDisplayAddress] = useState<string>('');
 
-  // Mock forecast data - replace with your API call
-  const mockForecast: DayForecast[] = [
-    { 
-      day: 'Monday', 
-      date: 'Nov 25', 
-      dayForecast: { high: 72, low: 58, condition: 'Sunny', icon: 'sun' }, 
-      eveningForecast: { high: 62, low: 54, condition: 'Clear', icon: 'sun' } 
-    },
-    { 
-      day: 'Tuesday', 
-      date: 'Nov 26', 
-      dayForecast: { high: 68, low: 55, condition: 'Partly Cloudy', icon: 'cloud' }, 
-      eveningForecast: { high: 58, low: 50, condition: 'Cloudy', icon: 'cloud' } 
-    },
-    { 
-      day: 'Wednesday', 
-      date: 'Nov 27', 
-      dayForecast: { high: 65, low: 52, condition: 'Rainy', icon: 'rain' }, 
-      eveningForecast: { high: 55, low: 48, condition: 'Light Rain', icon: 'rain' } 
-    },
-    { 
-      day: 'Thursday', 
-      date: 'Nov 28', 
-      dayForecast: { high: 70, low: 56, condition: 'Sunny', icon: 'sun' }, 
-      eveningForecast: { high: 60, low: 52, condition: 'Clear', icon: 'sun' } 
-    },
-    { 
-      day: 'Friday', 
-      date: 'Nov 29', 
-      dayForecast: { high: 73, low: 59, condition: 'Sunny', icon: 'sun' }, 
-      eveningForecast: { high: 63, low: 55, condition: 'Clear', icon: 'sun' } 
-    },
-    { 
-      day: 'Saturday', 
-      date: 'Nov 30', 
-      dayForecast: { high: 69, low: 54, condition: 'Cloudy', icon: 'cloud' }, 
-      eveningForecast: { high: 57, low: 49, condition: 'Cloudy', icon: 'cloud' } 
-    },
-    { 
-      day: 'Sunday', 
-      date: 'Dec 1', 
-      dayForecast: { high: 66, low: 51, condition: 'Windy', icon: 'wind' }, 
-      eveningForecast: { high: 56, low: 46, condition: 'Windy', icon: 'wind' } 
+  // Transform API response into DayForecast format
+  const transformForecastData = (apiResponse: Forecast): DayForecast[] => {
+    const periods = apiResponse.data.periods;
+    const dayForecasts: DayForecast[] = [];
+
+    // Group periods into day/night pairs
+    for (let i = 0; i < Math.min(periods.length, 14); i += 2) {
+      const dayPeriod = periods[i];
+      const nightPeriod = periods[i + 1] || dayPeriod; // fallback to day if no night
+
+      // Extract day name (remove "This " prefix if present)
+      let dayName = dayPeriod.name.replace('This ', '');
+      
+      // Generate a simple date format
+      const date = new Date();
+      date.setDate(date.getDate() + Math.floor(i / 2));
+      const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+      dayForecasts.push({
+        day: dayName,
+        date: dateStr,
+        dayForecast: {
+          high: dayPeriod.temperature,
+          low: nightPeriod.temperature,
+          condition: dayPeriod.shortForecast,
+          icon: dayPeriod.conditions.toLowerCase()
+        },
+        eveningForecast: {
+          high: dayPeriod.temperature,
+          low: nightPeriod.temperature,
+          condition: nightPeriod.shortForecast,
+          icon: nightPeriod.conditions.toLowerCase()
+        }
+      });
     }
-  ];
+
+    return dayForecasts.slice(0, 7); // Return only 7 days
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // TODO: Replace with your actual API call
-    // const response = await fetch('YOUR_API_ENDPOINT', {
-    //   method: 'POST',
-    //   body: JSON.stringify(address)
-    // });
-    // const data = await response.json();
-    
-    // Simulate API call
-    setTimeout(() => {
-      setForecast(mockForecast);
+    try {
+      // Replace 'YOUR_API_ENDPOINT' with your actual API endpoint
+      const response = await fetch('http://localhost:5133/api/forecast', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          street: address.street,
+          city: address.city,
+          state: address.state,
+          zip: address.zip
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch weather data');
+      }
+      
+      const data: Forecast = await response.json();
+      console.log('API Response:', data);
+      const transformedData = transformForecastData(data);
+      setForecast(transformedData);
+      setDisplayAddress(data.address);
+    } catch (error) {
+      console.error('Error fetching weather:', error);
+      alert('Failed to fetch weather data. Please try again.');
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -187,9 +193,7 @@ export default function App() {
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-slate-700">
               <MapPin className="w-5 h-5" />
-              <span>
-                {address.street}, {address.city}, {address.state} {address.zip}
-              </span>
+              <span>{displayAddress || `${address.street}, ${address.city}, ${address.state} ${address.zip}`}</span>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
