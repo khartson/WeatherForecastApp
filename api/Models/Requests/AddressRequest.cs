@@ -5,8 +5,8 @@ namespace api.Models.Requests
     public record AddressRequest(
         string Street,
         string City,
-        [param: Required]
-        [param: StringLength(2, MinimumLength = 2, ErrorMessage = "State must be in 2 letter abbreviation")]
+        [Required]
+        [StringLength(2, MinimumLength = 2, ErrorMessage = "State must be in 2 letter abbreviation")]
         string State,
         string Zip
     );
