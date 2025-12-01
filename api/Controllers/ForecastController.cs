@@ -17,6 +17,10 @@ namespace api.Controllers
             _weatherService = weatherService; 
         }
 
+        // TODO: Eventually, weatherservice should throw custom exceptions
+        // TODO: Add logging
+        // TODO: Eventually, refactor weather service to methods that return Result<T, E> types,
+        // so that model validation can occur at controller level instead of service level
         [HttpPost]
         public async Task<IActionResult> GetForecast([FromBody] AddressRequest address)
         {
@@ -26,7 +30,11 @@ namespace api.Controllers
             }
             catch (ValidationException ex)
             {
-                return BadRequest(ex.Message);
+                return UnprocessableEntity(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return StatusCode(502, ex.Message);
             }
         }
     }
