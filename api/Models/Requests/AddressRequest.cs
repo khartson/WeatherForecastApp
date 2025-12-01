@@ -3,11 +3,15 @@ using System.ComponentModel.DataAnnotations;
 namespace api.Models.Requests
 {
     public record AddressRequest(
+        [Required]
         string Street,
+        [Required]
         string City,
         [Required]
         [StringLength(2, MinimumLength = 2, ErrorMessage = "State must be in 2 letter abbreviation")]
         string State,
+        [Required]
+        [StringLength(5, MinimumLength = 5, ErrorMessage = "ZIP must be 5 characters"), RegularExpression(@"^\d+$", ErrorMessage = "ZIP must be numeric")]
         string Zip
     );
 }

@@ -2,6 +2,7 @@ using System.Formats.Asn1;
 using api.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using api.Models.Requests;
+using System.ComponentModel.DataAnnotations;
 
 namespace api.Controllers
 {
@@ -19,8 +20,14 @@ namespace api.Controllers
         [HttpPost]
         public async Task<IActionResult> GetForecast([FromBody] AddressRequest address)
         {
-            var forecast = await _weatherService.GetForecast(address);
-            return Ok(forecast);
+            try{
+                var forecast = await _weatherService.GetForecast(address);
+                return Ok(forecast);
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }
