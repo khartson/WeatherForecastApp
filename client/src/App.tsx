@@ -79,8 +79,9 @@ export default function App() {
     setError(null);
     
     try {
-      // Replace 'YOUR_API_ENDPOINT' with your actual API endpoint
-      const response = await fetch('http://localhost:5133/api/forecast', {
+      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5133'
+      console.log("apiUrl:", apiUrl);
+      const response = await fetch(`${apiUrl}/api/forecast`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
