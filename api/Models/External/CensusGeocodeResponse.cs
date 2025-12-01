@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace api.Models.External
 {
     public record GeocodeRootResponse(
@@ -5,6 +7,7 @@ namespace api.Models.External
     );
 
     public record Result(
+        [property: MinLength(1, ErrorMessage = "No address matches found")]
         IReadOnlyList<AddressMatch> AddressMatches
     );
 

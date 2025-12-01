@@ -3,7 +3,7 @@ using api.Models.Requests;
 using api.Models.Responses;
 using api.Services.Interfaces;
 using System.Net;
-
+using System.ComponentModel.DataAnnotations;
 // TODO: Logging and error handling, retries, etc.
 
 namespace api.Services.Implementations
@@ -65,6 +65,26 @@ namespace api.Services.Implementations
 
         private async Task<AddressMatch> GetCoordinatesFromAddressAsync(AddressRequest address)
         {
+            GeocodeRootResponse res = await GetGeocodeRootResponseAsync(address);
+
+            var context  = new ValidationContext(res.Result);
+            var results  = new List<ValidationResult>();
+            bool isValid = Validator.TryValidateObject(res.Result, context, results, true);
+
+            if (!isValid)
+            {
+                Console.WriteLine("Geocoding response validation failed.");
+                var errors = string.Join("; ", results.Select(r => r.ErrorMessage));
+                throw new ValidationException($"Geocoding response validation failed: {errors}");
+            }
+            
+            // TOOD: handlle multiple matches 
+            AddressMatch addressMatch = res.Result.AddressMatches[0];
+            return addressMatch;
+        }   
+
+        private async Task<GeocodeRootResponse> GetGeocodeRootResponseAsync(AddressRequest address)
+        {
             string street = address.Street.Trim(); 
             string city   = address.City.Trim();
             string state  = address.State.Trim();
@@ -73,28 +93,43 @@ namespace api.Services.Implementations
             string encodedAddress = WebUtility.UrlEncode($"{street}, {city}, {state} {zip}");
             Console.WriteLine($"Encoded Address: {encodedAddress}");
             Console.WriteLine($"Request URL: locations/onelineaddress?address={encodedAddress}&benchmark=4&format=json");
-            GeocodeRootResponse res = await _geoCodeClient.GetFromJsonAsync<GeocodeRootResponse>(
+
+            GeocodeRootResponse? res = await _geoCodeClient.GetFromJsonAsync<GeocodeRootResponse>(
                 $"locations/onelineaddress?address={encodedAddress}&benchmark=4&format=json"
             );
 
-            AddressMatch addressMatch = res.Result.AddressMatches.First();
-            return addressMatch;
-        }   
+            if (res == null)
+            {
+                throw new InvalidOperationException("Geocoding API returned no response ");
+            }
+
+            return res;
+        }
         private async Task<NwsGridResponse> GetGridpointsFromGeoCodeAsync(double x, double y)
         {
             
-            NwsGridResponse res = await _nwsClient.GetFromJsonAsync<NwsGridResponse>(
+            NwsGridResponse? res = await _nwsClient.GetFromJsonAsync<NwsGridResponse>(
                 $"points/{y},{x}"
             );
+
+            if (res == null)
+            {
+                throw new InvalidOperationException("NWS Gridpoints API returned no response ");
+            }
 
             return res; 
         }         
 
         private async Task<NwsForecastResponse> GetForecastFromGridResponseAsync(string forecastUrl)
         {
-            NwsForecastResponse res = await _nwsClient.GetFromJsonAsync<NwsForecastResponse>(
+            NwsForecastResponse? res = await _nwsClient.GetFromJsonAsync<NwsForecastResponse>(
                 forecastUrl.Replace("https://api.weather.gov/", "")
             );
+
+            if (res == null)
+            {
+                throw new InvalidOperationException("NWS Forecast API returned no response ");
+            }
 
             return res;
         }
