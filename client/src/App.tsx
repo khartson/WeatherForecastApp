@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Search, MapPin, Cloud } from 'lucide-react';
 import { WeatherCard } from './components/WeatherCard';
-import type { Forecast, ForecastPeriod, AddressRequest} from './types/Forecast';
+import { ValidationErrorDisplay } from './components/ErrorDisplay';
+import type { Forecast, AddressRequest} from './types/Forecast';
+import type { ValidationError } from './types/Errors';
 import { GetForecast } from './utils/GetForecast';
 
 interface DayForecast {
@@ -31,6 +33,7 @@ export default function App() {
   const [forecast, setForecast] = useState<DayForecast[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [displayAddress, setDisplayAddress] = useState<string>('');
+  const [error, setError] = useState<ValidationError | null>(null);
 
   // Transform API response into DayForecast format
   const transformForecastData = (apiResponse: Forecast): DayForecast[] => {
@@ -74,6 +77,7 @@ export default function App() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     
     try {
       // Replace 'YOUR_API_ENDPOINT' with your actual API endpoint
@@ -91,7 +95,22 @@ export default function App() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch weather data');
+        //
+        if (response.status === 400) {
+          const errorData: ValidationError = await response.json();
+          setError(errorData);
+          return;
+        } else if (response.status === 422) {
+          const errorData: { error: string } = await response.json();
+          alert(`An error occurred withy your request: ${errorData.error}`);
+          setAddress({
+            street: '',
+            city: '',
+            state: '',
+            zip: ''
+          });
+          return;
+        }
       }
       
       const data: Forecast = await response.json();
@@ -126,6 +145,7 @@ export default function App() {
           <p className="text-slate-600">Enter your address to view the 7-day forecast</p>
         </div>
 
+        {error && <div className="pl-5 pr-5 pb-5"><ValidationErrorDisplay error={error as ValidationError} /></div>}
         {/* Input Card - Glassmorphic */}
         <div className="backdrop-blur-lg bg-white/60 rounded-3xl p-6 md:p-8 shadow-2xl border border-white/80 mb-8">
           <form onSubmit={handleSubmit}>
