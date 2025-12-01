@@ -4,7 +4,6 @@ import { WeatherCard } from './components/WeatherCard';
 import { ValidationErrorDisplay } from './components/ErrorDisplay';
 import type { Forecast, AddressRequest} from './types/Forecast';
 import type { ValidationError } from './types/Errors';
-import { GetForecast } from './utils/GetForecast';
 
 interface DayForecast {
   day: string;
