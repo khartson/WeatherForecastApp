@@ -37,8 +37,8 @@ jobs:
           appSourcePath: ${{ github.workspace }}/api
           # dockerfilePath: Dockerfile
           # registryUrl: 
-          # registryUsername: ${{ secrets.WEATHERAPPAPI_REGISTRY_USERNAME }}
-          # registryPassword: ${{ secrets.WEATHERAPPAPI_REGISTRY_PASSWORD }}
+          registryUsername: ${{ secrets.WEATHERAPPAPI_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.WEATHERAPPAPI_REGISTRY_PASSWORD }}
           containerAppName: weatherapp-api
           resourceGroup: rg-weatherapplication
           imageToBuild: weatherapp-api:${{ github.sha }}
